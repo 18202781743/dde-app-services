@@ -37,6 +37,8 @@ public:
     void setSyncRequestCache(ConfigSyncRequestCache *cache);
 
     DSGConfigConn* connObject(const uint uid);
+    QList<DSGConfigConn*> connObjects() const;
+
 
     DSGConfigConn* createConn(const uint uid);
 
@@ -53,6 +55,7 @@ public:
     void save();
 
     void doSyncConfigCache(const ConfigCacheKey &key);
+
 Q_SIGNALS: // SIGNALS
     void updateValueChanged(const QString &key);
 

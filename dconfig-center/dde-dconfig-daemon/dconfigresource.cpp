@@ -57,6 +57,11 @@ DSGConfigConn *DSGConfigResource::connObject(const uint uid)
     return m_conns.value(getConnKey(uid), nullptr);
 }
 
+QList<DSGConfigConn *> DSGConfigResource::connObjects() const
+{
+    return m_conns.values();
+}
+
 DSGConfigConn *DSGConfigResource::createConn(const uint uid)
 {
     QString key = getConnKey(uid);

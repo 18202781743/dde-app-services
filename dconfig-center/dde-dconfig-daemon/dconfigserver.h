@@ -14,6 +14,7 @@ class DSGConfigResource;
 class RefManager;
 class ConfigSyncBatchRequest;
 class ConfigSyncRequestCache;
+class DSGReportStatistics;
 /**
  * @brief The DSGConfigServer class
  * 管理配置策略服务
@@ -74,6 +75,8 @@ private:
 
     bool filterRequestPath(DSGConfigResource *resource, const ConfigureId &configureInfo) const;
 
+    QString reportStatistics() const;
+
 private:
 
     // 所有链接，一个资源对应一个链接
@@ -86,4 +89,5 @@ private:
     QString m_localPrefix;
     bool m_enableExit = false;
     ConfigSyncRequestCache *m_syncRequestCache = nullptr;
+    DSGReportStatistics *m_statistics = nullptr;
 };

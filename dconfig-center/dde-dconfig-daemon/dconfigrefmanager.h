@@ -111,4 +111,31 @@ private:
     int m_batchCount;
 };
 
+class DSGReportStatistics : public QObject
+{
+    Q_OBJECT
+public:
+    explicit DSGReportStatistics(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+
+    }
+    inline bool operator==(const DSGReportStatistics &other)
+    {
+        return other.m_content == this->m_content;
+    }
+    void append(const QString &content)
+    {
+        m_content.append(content);
+    }
+    QString fetchStatistics()
+    {
+        auto result = m_content;
+        m_content.clear();
+        return result;
+    }
+private:
+    QString m_content;
+};
+
 Q_DECLARE_METATYPE(ConfigSyncBatchRequest)

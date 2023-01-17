@@ -35,6 +35,7 @@ DSGConfigServer::DSGConfigServer(QObject *parent)
       m_watcher(nullptr),
       m_refManager(new RefManager(this))
     , m_syncRequestCache(new ConfigSyncRequestCache(this))
+    , m_statistics(new DSGReportStatistics(this))
 {
     connect(this, &DSGConfigServer::releaseResource, this, &DSGConfigServer::onReleaseResource);
     connect(m_refManager, &RefManager::releaseResource, this, &DSGConfigServer::releaseResource);
@@ -277,6 +278,18 @@ bool DSGConfigServer::filterRequestPath(DSGConfigResource *resource, const Confi
     }
 
     return false;
+}
+
+QString DSGConfigServer::reportStatistics() const
+{
+    m_statistics->append(QString("Totle resourceSize: %1").arg(m_resources.size()));
+    for (auto item : m_resources) {
+        m_statistics->append("resource:" + item->path() + QString(" conn size:%1").arg(item->connObjects().size()));
+        for (auto conn : item->connObjects()) {
+             m_statistics->append("resource:" + conn->key());
+        }
+    }
+    return m_statistics->fetchStatistics();
 }
 
 QString DSGConfigServer::validDBusObjectPath(const QString &path)
