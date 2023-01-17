@@ -19,7 +19,8 @@ DCORE_END_NAMESPACE
 DCORE_USE_NAMESPACE
 class DSGConfigConn;
 class ConfigSyncRequestCache;
-class DSGGeneralConfigManager;
+class DSGInterappConfigManager;
+
 /**
  * @brief The DSGConfigResource class
  * 管理单个链接
@@ -56,8 +57,9 @@ public:
 
     void doSyncConfigCache(const ConfigCacheKey &key);
 
-    bool isGeneralResource() const;
-    void setGeneralConfigManager(DSGGeneralConfigManager *ma);
+    bool isInterappResource() const;
+    bool isInappResource() const;
+    void setInterappConfigManager(DSGInterappConfigManager *ma);
 
 Q_SIGNALS: // SIGNALS
     void updateValueChanged(const QString &key);
@@ -83,22 +85,23 @@ private Q_SLOTS:
 
 private:
     QString getConnKey(const uint uid) const;
+    DConfigCache *cacheObject(const uint uid) const;
 
     void repareCache(DConfigCache* cache, DConfigMeta *oldMeta, DConfigMeta *newMeta);
-    bool setGeneralConfigForConn(DSGConfigConn *conn);
-    QSharedPointer<DConfigFile> getOrCreateConfig(bool *isCreate = nullptr) const;
-    QSharedPointer<DConfigCache> getOrCreateCache(const uint uid, bool *isCreate = nullptr) const;
+    bool setInterappConfigForConn(DSGConfigConn *conn);
+    DConfigFile* getOrCreateConfig(bool *isCreate = nullptr) const;
+    DConfigCache* getOrCreateCache(const uint uid, bool *isCreate = nullptr) const;
 
 private:
     ResourceKey m_path;
     QString m_localPrefix;
-    QSharedPointer<DConfigFile> m_config;
-    QMap<ConnKey, DSGConfigConn*> m_conns;
-    ResourceConfig *m_configs = nullptr;
+    DConfigFile* m_config = nullptr;
+    QMap<uint, DSGConfigConn *> m_conns;
+    QMap<uint, DConfigCache *> m_caches;
     QString m_appid;
     QString m_fileName;
     QString m_subpath;
     ConfigSyncRequestCache *m_syncRequestCache = nullptr;
-    DSGGeneralConfigManager *m_generalConfigManager = nullptr;
+    DSGInterappConfigManager *m_interappConfigManager = nullptr;
 };
 

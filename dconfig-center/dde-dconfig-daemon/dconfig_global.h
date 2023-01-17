@@ -20,9 +20,10 @@ using ConnKey = QString;
 using ResourceKey = QString;
 using ConnServiceName = QString;
 using ConnRefCount = int;
+// user: u-${ConnKey}, global: g-${ResourceKey}
 using ConfigCacheKey = QString;
 // /filename/subpath/userid
-using GeneralConfigFileKey = QString;
+using InterappConfigFileKey = QString;
 
 static const QString EmptyAppId("");
 
@@ -38,13 +39,13 @@ inline ConnKey getConnectionKey(const ResourceKey key, const uint uid)
 {
     return QString("%1/%2").arg(key).arg(uid);
 }
-inline GeneralConfigFileKey getGeneralConfigKeyByConn(const ConnKey &connKey)
+inline InterappConfigFileKey getInterappConfigKeyByConn(const ConnKey &connKey)
 {
     return getResourceKey(connKey);
 }
-inline GeneralConfigFileKey getGeneralConfigKey(const ResourceKey &resouceKey, bool isGeneral)
+inline InterappConfigFileKey getInterappConfigKey(const ResourceKey &resouceKey, bool isInterapp)
 {
-    if (isGeneral)
+    if (isInterapp)
         return resouceKey;
     return resouceKey.mid(resouceKey.indexOf('/', 1));
 }
@@ -52,7 +53,7 @@ inline bool isTheResouceKey(const ResourceKey &r1, const ResourceKey &r2)
 {
     return r1 == r2;
 }
-inline bool isGeneralResource(const QString &appid)
+inline bool isInterappResource(const QString &appid)
 {
     return appid == EmptyAppId;
 }

@@ -16,44 +16,45 @@ DCORE_END_NAMESPACE
 
 DCORE_USE_NAMESPACE
 /**
- * @brief The GeneralConfig class
+ * @brief The InterappConfig class
  * 管理单个资源的公共配置信息
  * 与DSGConfigResource类似，含有一个DConfigFile及多个DConfigCache.
  */
-class GeneralConfig
+class InterappConfig
 {
 public:
-    ~GeneralConfig();
-    QSharedPointer<DConfigCache> cache(const uint uid) const;
+    ~InterappConfig();
+    DConfigCache* cache(const uint uid) const;
     bool contains(const uint id) const;
     void removeCache(const uint uid);
-    void addCache(const uint uid, QSharedPointer<DConfigCache> cache);
-    void setConfig(QSharedPointer<DConfigFile> config);
-    QSharedPointer<DConfigFile> config() const;
+    void addCache(const uint uid, DConfigCache* cache);
+    void setConfig(DConfigFile* config);
+    DConfigFile* config() const;
+    QList<DConfigCache *> caches() const;
 private:
-    QSharedPointer<DConfigFile> m_config;
-    QMap<uint, QSharedPointer<DConfigCache>> m_caches;
+    DConfigFile* m_config = nullptr;
+    QMap<uint, DConfigCache*> m_caches;
 };
 
 /**
- * @brief The DSGGeneralConfigManager class
+ * @brief The DSGInterappConfigManager class
  * 管理公共资源
  */
-class DSGGeneralConfigManager : public QObject
+class DSGInterappConfigManager : public QObject
 {
     Q_OBJECT
 public:
-    DSGGeneralConfigManager(QObject *parent = nullptr);
-    virtual ~DSGGeneralConfigManager() override;
+    DSGInterappConfigManager(QObject *parent = nullptr);
+    virtual ~DSGInterappConfigManager() override;
 
-    GeneralConfig *config(const GeneralConfigFileKey &key) const;
-    bool contains(const GeneralConfigFileKey &key) const;
-    GeneralConfig *createConfig(const GeneralConfigFileKey &key);
-    void removeConfig(const GeneralConfigFileKey &key);
+    InterappConfig *config(const InterappConfigFileKey &key) const;
+    bool contains(const InterappConfigFileKey &key) const;
+    InterappConfig *createConfig(const InterappConfigFileKey &key);
+    void removeConfig(const InterappConfigFileKey &key);
 
 Q_SIGNALS:
     void valueChanged(const QString &key, const ConnKey &connKey);
 
 private:
-    QMap<GeneralConfigFileKey, GeneralConfig *> m_generalConfigs;
+    QMap<InterappConfigFileKey, InterappConfig *> m_generalConfigs;
 };

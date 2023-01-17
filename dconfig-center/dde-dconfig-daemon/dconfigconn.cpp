@@ -37,7 +37,7 @@ uint DSGConfigConn::uid() const
     return getConnectionKey(m_key);
 }
 
-QSharedPointer<DConfigCache> DSGConfigConn::cache() const
+DConfigCache *DSGConfigConn::cache() const
 {
     return m_cache;
 }
@@ -48,17 +48,17 @@ void DSGConfigConn::setConfigFile(DConfigFile *configFile)
     m_keys = m_config->meta()->keyList().toSet();
 }
 
-void DSGConfigConn::setConfigCache(QSharedPointer<DConfigCache> cache)
+void DSGConfigConn::setConfigCache(DConfigCache *cache)
 {
     m_cache = cache;
 }
 
-void DSGConfigConn::setGeneralConfigFile(DConfigFile *configFile)
+void DSGConfigConn::setInterappConfigFile(DConfigFile *configFile)
 {
     m_generalConfig = configFile;
 }
 
-void DSGConfigConn::setGeneralConfigCache(DConfigCache *cache)
+void DSGConfigConn::setInterappConfigCache(DConfigCache *cache)
 {
     m_generalCache = cache;
 }
@@ -133,8 +133,8 @@ void DSGConfigConn::setValue(const QString &key, const QDBusVariant &value)
         return;
 
     const auto &v = decodeQDBusArgument(value.variant());
-    qCDebug(cfLog) << "set value key:" << key << ", now value:" << v << ", old value:" << m_config->value(key, m_cache.data());
-    if(!m_config->setValue(key, v, getAppid(), m_cache.data()))
+    qCDebug(cfLog) << "set value key:" << key << ", now value:" << v << ", old value:" << m_config->value(key, m_cache);
+    if(!m_config->setValue(key, v, getAppid(), m_cache))
         return;
 
     if (m_config->meta()->flags(key).testFlag(DConfigFile::Global)) {
@@ -150,8 +150,8 @@ void DSGConfigConn::reset(const QString &key)
         return;
 
     const auto &v = m_config->meta()->value(key);
-    qCDebug(cfLog) << "reset key:" << key << ", meta value:" << v << ", old value:" << m_config->value(key, m_cache.data());
-    if(!m_config->setValue(key, v, getAppid(), m_cache.data()))
+    qCDebug(cfLog) << "reset key:" << key << ", meta value:" << v << ", old value:" << m_config->value(key, m_cache);
+    if(!m_config->setValue(key, v, getAppid(), m_cache))
         return;
 
     if (m_config->meta()->flags(key).testFlag(DConfigFile::Global)) {
@@ -172,7 +172,7 @@ QDBusVariant DSGConfigConn::value(const QString &key)
         return QDBusVariant();
 
     bool fromMeta = false;
-    auto value = m_config->value(key, m_cache.data(), &fromMeta);
+    auto value = m_config->value(key, m_cache, &fromMeta);
     if (value.isNull()) {
         QString errorMsg = QString("[%1] requires the value in [%2].").arg(key).arg(getAppid());
         qWarning() << errorMsg;

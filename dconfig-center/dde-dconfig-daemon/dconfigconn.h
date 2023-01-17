@@ -32,14 +32,14 @@ public:
 
     uint uid() const;
 
-    QSharedPointer<DTK_CORE_NAMESPACE::DConfigCache> cache() const;
+    DTK_CORE_NAMESPACE::DConfigCache* cache() const;
 
     void setConfigFile(DTK_CORE_NAMESPACE::DConfigFile *configFile);
 
-    void setConfigCache(QSharedPointer<DTK_CORE_NAMESPACE::DConfigCache> cache);
+    void setConfigCache(DTK_CORE_NAMESPACE::DConfigCache* cache);
 
-    void setGeneralConfigFile(DTK_CORE_NAMESPACE::DConfigFile *configFile);
-    void setGeneralConfigCache(DTK_CORE_NAMESPACE::DConfigCache *cache);
+    void setInterappConfigFile(DTK_CORE_NAMESPACE::DConfigFile *configFile);
+    void setInterappConfigCache(DTK_CORE_NAMESPACE::DConfigCache *cache);
 
 Q_SIGNALS:
     void releaseChanged(const ConnServiceName &service);
@@ -72,7 +72,7 @@ private:
 
 private:
     DTK_CORE_NAMESPACE::DConfigFile *m_config = nullptr;
-    QSharedPointer<DTK_CORE_NAMESPACE::DConfigCache> m_cache = nullptr;
+    DTK_CORE_NAMESPACE::DConfigCache* m_cache = nullptr;
     DTK_CORE_NAMESPACE::DConfigFile *m_generalConfig = nullptr;
     DTK_CORE_NAMESPACE::DConfigCache *m_generalCache = nullptr;
     ConnKey m_key;

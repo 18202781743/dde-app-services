@@ -101,7 +101,7 @@ bool ServiceRef::release()
  */
 RefManager::RefManager(QObject *parent)
     : QObject(parent),
-      m_delayReleaseTime(30000) // 30s
+      m_delayReleaseTime(3) // 30s
 {
     m_timerPool.setInitFunc([](QTimer* timer){
         timer->setSingleShot(true);
@@ -416,7 +416,7 @@ void RefManager::delayDeleteResource(const QList<ResourceRef *> &deleteResources
 ConfigSyncRequestCache::ConfigSyncRequestCache(QObject *parent)
     : QObject (parent)
     , m_syncTimer(new QBasicTimer())
-    , m_delaySyncTime(30000)
+    , m_delaySyncTime(3)
     , m_batchCount(10)
 {
 }

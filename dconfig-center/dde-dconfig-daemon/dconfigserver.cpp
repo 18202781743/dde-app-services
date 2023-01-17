@@ -36,7 +36,7 @@ DSGConfigServer::DSGConfigServer(QObject *parent)
       m_watcher(nullptr),
       m_refManager(new RefManager(this))
     , m_syncRequestCache(new ConfigSyncRequestCache(this))
-    , m_generalConfigManager(new DSGGeneralConfigManager(this))
+    , m_interappConfigManager(new DSGInterappConfigManager(this))
 {
     connect(this, &DSGConfigServer::releaseResource, this, &DSGConfigServer::onReleaseResource);
     connect(m_refManager, &RefManager::releaseResource, this, &DSGConfigServer::releaseResource);
@@ -44,7 +44,7 @@ DSGConfigServer::DSGConfigServer(QObject *parent)
     connect(m_syncRequestCache, &ConfigSyncRequestCache::syncConfigRequest, this, &DSGConfigServer::doSyncConfigCache);
 
     // update emit all app resource's valueChanged connected if general configuration is changed.
-    connect(m_generalConfigManager, &DSGGeneralConfigManager::valueChanged, this, &DSGConfigServer::doUpdateGeneralConfigValueChanged);
+    connect(m_interappConfigManager, &DSGInterappConfigManager::valueChanged, this, &DSGConfigServer::doUpdateInterappConfigValueChanged);
 }
 
 DSGConfigServer::~DSGConfigServer()
@@ -139,7 +139,7 @@ QDBusObjectPath DSGConfigServer::acquireManager(const QString &appid, const QStr
     auto resource = resourceObject(path);
     if (!resource) {
         resource = new DSGConfigResource(path, m_localPrefix);
-        resource->setGeneralConfigManager(m_generalConfigManager);
+        resource->setInterappConfigManager(m_interappConfigManager);
         bool loadStatus = resource->load(appid, name, subpath);
         if (!loadStatus) {
             //error
@@ -199,39 +199,38 @@ void DSGConfigServer::onReleaseChanged(const ConnServiceName &service, const Con
 void DSGConfigServer::onReleaseResource(const ConnKey &connKey)
 {
     const ResourceKey resourceKey = getResourceKey(connKey);
-    if (m_resources.contains(resourceKey)) {
-        auto resource = m_resources.value(resourceKey);
-        qCInfo(cfLog, "remove connection:%s", qPrintable(connKey));
-        resource->removeConn(connKey);
+    auto resource = m_resources.value(resourceKey);
+    if (!resource)
+        return;
+    qCInfo(cfLog, "remove connection:%s", qPrintable(connKey));
+    resource->removeConn(connKey);
+
+    if (resource->isEmptyConn()) {
+        qCInfo(cfLog, "remove resource:%s", qPrintable(resourceKey));
+
+        m_resources.remove(resourceKey);
+        resource->save();
+        resource->deleteLater();
+
+        if (m_enableExit) {
+            Q_EMIT tryExit();
+        }
+    }
+
+    if (auto config = interappConfigWithNoConn(connKey)) {
+        const auto interappKey = getInterappConfigKey(resource->path(), resource->isInterappResource());
+        const auto uid = getConnectionKey(connKey);
+        if (auto cache = config->cache(uid)) {
+            // remove general cache.
+            cache->save(m_localPrefix);
+            config->removeCache(uid);
+            qCDebug(cfLog) << "remove interapp config's cache:" << interappKey << ", and uid is:" << uid;
+        }
+
         if (resource->isEmptyConn()) {
-            qCInfo(cfLog, "remove resource:%s", qPrintable(resourceKey));
-
-            const auto generalKey = getGeneralConfigKey(resource->path(), resource->isGeneralResource());
-            if (auto config = m_generalConfigManager->config(generalKey)) {
-                config->config()->save(m_localPrefix);
-
-                bool existRef = false;
-                for (auto item : m_resources) {
-                    if (!isTheResouceKey(resourceKey, item->path()))
-                        continue;
-                    if (item->isGeneralResource())
-                        continue;
-                    if (item->connObject(connKey)) {
-                        existRef = true;
-                        break;
-                    }
-                }
-                if (!existRef)
-                    m_generalConfigManager->removeConfig(generalKey);
-            }
-
-            m_resources.remove(resourceKey);
-            resource->save();
-            resource->deleteLater();
-
-            if (m_enableExit) {
-                Q_EMIT tryExit();
-            }
+            // remove general config.
+            m_interappConfigManager->removeConfig(interappKey);
+            qCDebug(cfLog) << "remove interapp config:" << interappKey;
         }
     }
 }
@@ -260,17 +259,17 @@ void DSGConfigServer::doSyncConfigCache(const ConfigSyncBatchRequest &request)
     }
 }
 
-void DSGConfigServer::doUpdateGeneralConfigValueChanged(const QString &key, const ConnKey &connKey)
+void DSGConfigServer::doUpdateInterappConfigValueChanged(const QString &key, const ConnKey &connKey)
 {
     // only general resource to emit generalConfig's valueChanged.
-    auto generalKey = getGeneralConfigKeyByConn(connKey);
-    auto config = m_generalConfigManager->config(generalKey);
+    auto interappKey = getInterappConfigKeyByConn(connKey);
+    auto config = m_interappConfigManager->config(interappKey);
     const bool isGlobal = config->config()->meta()->flags(key).testFlag(DConfigFile::Global);
     const auto resourceKey = getResourceKey(connKey);
     for (auto item : m_resources) {
         if (!isTheResouceKey(resourceKey, item->path()))
             continue;
-        if (item->isGeneralResource())
+        if (item->isInterappResource())
             continue;
         if (auto conn = item->connObject(connKey)) {
             if (isGlobal) {
@@ -325,6 +324,22 @@ bool DSGConfigServer::filterRequestPath(DSGConfigResource *resource, const Confi
     }
 
     return false;
+}
+
+InterappConfig *DSGConfigServer::interappConfigWithNoConn(const ConnKey &connKey) const
+{
+    const ResourceKey interappKey = getInterappConfigKeyByConn(connKey);
+    const ResourceKey resourceKey = getResourceKey(connKey);
+    auto config = m_interappConfigManager->config(interappKey);
+    for (auto item : m_resources) {
+        if (!isTheResouceKey(resourceKey, item->path()))
+            continue;
+        if (item->isInterappResource())
+            continue;
+        if (item->connObject(connKey))
+            return nullptr;
+    }
+    return config;
 }
 
 QString DSGConfigServer::validDBusObjectPath(const QString &path)

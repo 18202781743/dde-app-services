@@ -10,6 +10,12 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 include(GNUInstallDirs)
 
+#if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fsanitize=address -fno-omit-frame-pointer")
+#else ()
+#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
+#endif ()
+
 add_subdirectory("dde-dconfig-daemon")
 add_subdirectory("dde-dconfig-editor")
 add_subdirectory("dde-dconfig")

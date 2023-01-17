@@ -14,7 +14,8 @@ class DSGConfigResource;
 class RefManager;
 class ConfigSyncBatchRequest;
 class ConfigSyncRequestCache;
-class DSGGeneralConfigManager;
+class InterappConfig;
+class DSGInterappConfigManager;
 /**
  * @brief The DSGConfigServer class
  * 管理配置策略服务
@@ -68,7 +69,7 @@ private Q_SLOTS:
 
     void doSyncConfigCache(const ConfigSyncBatchRequest &request);
 
-    void doUpdateGeneralConfigValueChanged(const QString &key, const ConnKey &connKey);
+    void doUpdateInterappConfigValueChanged(const QString &key, const ConnKey &connKey);
 
 private:
     ResourceKey getResourceKeyByConfigCache(const ConfigCacheKey &key);
@@ -76,6 +77,8 @@ private:
     ConfigureId getConfigureIdByPath(const QString &path);
 
     bool filterRequestPath(DSGConfigResource *resource, const ConfigureId &configureInfo) const;
+
+    InterappConfig *interappConfigWithNoConn(const ConnKey &connKey) const;
 
 private:
 
@@ -89,5 +92,5 @@ private:
     QString m_localPrefix;
     bool m_enableExit = false;
     ConfigSyncRequestCache *m_syncRequestCache = nullptr;
-    DSGGeneralConfigManager *m_generalConfigManager = nullptr;
+    DSGInterappConfigManager *m_interappConfigManager = nullptr;
 };

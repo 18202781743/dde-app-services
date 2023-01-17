@@ -16,10 +16,10 @@ public:
     explicit DConfigExample(const QString &fileName)
         :fileName(fileName)
     {
-        baseAPI();
-        watchValueChanged();
-        subpath();
-        mutilFetchConfig();
+//        baseAPI();
+//        watchValueChanged();
+//        subpath();
+//        mutilFetchConfig();
         generalConfig();
     }
 
