@@ -21,6 +21,7 @@
 OEMDialog::OEMDialog(QWidget *parent)
     : DDialog( parent)
 {
+    setWindowFlags(windowFlags() | Qt::WindowMinMaxButtonsHint);
     m_exportView = new QTreeView();
     m_exportView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_exportView->header()->setMinimumSectionSize(400);
@@ -51,6 +52,8 @@ void OEMDialog::loadData(const QString &language)
     m_model = new QStandardItemModel(this);
     m_model->setHorizontalHeaderLabels(QStringList() << QStringLiteral("项") << QStringLiteral("值"));
     m_exportView->setModel(m_model);
+    m_exportView->header()->setSectionResizeMode(QHeaderView::Interactive);
+    m_exportView->header()->resizeSection(0, 250);
 
     const auto &apps = applications();
     for (auto app : apps) {
@@ -249,6 +252,7 @@ void OEMDialog::displayChangedResult()
     d->setAttribute(Qt::WA_DeleteOnClose, true);
 
     QTableView *view = new QTableView(this);
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     view->horizontalHeader()->setStretchLastSection(true);
     view->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
