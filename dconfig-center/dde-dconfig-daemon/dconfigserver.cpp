@@ -14,6 +14,7 @@
 #include <QLoggingCategory>
 #include <QDir>
 #include <QFile>
+#include <DConfigFile>
 
 #include "configmanager_adaptor.h"
 
@@ -542,7 +543,7 @@ void DSGConfigServer::reload()
     // Find changed files
     auto diffConfigureFiles = [] (const QVector<FileSignature> &s1, const QVector<FileSignature> &s2) {
         QStringList diffs;
-        for (const auto& item : std::as_const(s1)) {
+        for (const auto& item : qAsConst(s1)) {
             auto iter = std::find_if(s2.cbegin(), s2.cend(), [&item](const FileSignature& other) {
                 return item.filePath == other.filePath;
             });
@@ -566,7 +567,7 @@ void DSGConfigServer::reload()
 
     // Process changed files
     int failedCount = 0;
-    for (const auto &file : std::as_const(changedFiles)) {
+    for (const auto &file : qAsConst(changedFiles)) {
         const auto errorMsg = updateInternal(file);
         if (errorMsg) {
             qCWarning(cfLog()) << "Reload failed to update file:" << file << ", reason:" << *errorMsg;
@@ -592,12 +593,12 @@ QVector<DSGConfigServer::FileSignature> DSGConfigServer::allConfigureFileSignatu
     QStringList overrideDirs {
         QString("%1/etc/dsg/configs/overrides").arg(localPrefix)
     };
-    for (const auto &dir : std::as_const(metaDirs)) {
+    for (const auto &dir : qAsConst(metaDirs)) {
         overrideDirs << QString("%1/overrides").arg(dir);
     }
     dirs << overrideDirs;
 
-    for (const QString &dir : std::as_const(dirs)) {
+    for (const QString &dir : qAsConst(dirs)) {
         if (!QDir(dir).exists())
             continue;
 
@@ -612,7 +613,7 @@ QVector<DSGConfigServer::FileSignature> DSGConfigServer::allConfigureFileSignatu
                 DSGConfigServer::FileSignature signature;
                 signature.filePath = filePath;
                 signature.size = fileInfo.size();
-                signature.changeTime = fileInfo.metadataChangeTime(QTimeZone::UTC);
+                signature.changeTime = fileInfo.metadataChangeTime();
 
                 signatures << signature;
             }
