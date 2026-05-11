@@ -96,7 +96,9 @@ inline ConfigureId getMetaConfigureId(const QString &path)
     ConfigureId info;
     // /usr/share/dsg/configs/[$appid]/[$subpath]/$resource.json
     // Use negative lookahead (?!overrides/) to exclude override paths which should be handled by getOverrideConfigureId
-    static QRegularExpression usrReg(R"(/configs/(?!overrides/)(?<appid>([a-z0-9\s\-_\@\-\^!#$%&.]+\/)?)(?<subpath>([a-z0-9\s\-_\@\-\^!#$%&.]+\/)*)(?<resource>[a-z0-9\s\-_\@\-\^!#$%&.]+).json$)");
+    static QRegularExpression usrReg(
+        R"(/configs/(?!overrides/)(?<appid>(?>[a-zA-Z0-9\s_@^!#$%&.\-]+)\/)?(?<subpath>(?:(?>[a-zA-Z0-9\s_@^!#$%&.\-]+)\/)*)(?<resource>[a-zA-Z0-9\s_@^!#$%&.\-]+)\.json$)"
+    );
 
     QRegularExpressionMatch match;
     match = usrReg.match(path);
@@ -114,10 +116,14 @@ inline ConfigureId getOverrideConfigureId(const QString &path)
 {
     ConfigureId info;
     // /usr/share/dsg/configs/overrides/[$appid]/$resource/[$subpath]/$override_id.json
-    static QRegularExpression usrReg(R"(/configs/overrides/(?<appid>([a-z0-9\s\-_\@\-\^!#$%&.]+\/)?)(?<resource>[a-z0-9\s\-_\@\-\^!#$%&.]+)/(?<subpath>([a-z0-9\s\-_\@\-\^!#$%&.]+\/)*)(?<configurationid>[a-z0-9\s\-_\@\-\^!#$%&.]+).json$)");
+    static QRegularExpression usrReg(
+        R"(/configs/overrides/(?<appid>(?>[a-zA-Z0-9\s_@^!#$%&.\-]+)\/)?(?<resource>(?>[a-zA-Z0-9\s_@^!#$%&.\-]+))/(?<subpath>(?:(?>[a-zA-Z0-9\s_@^!#$%&.\-]+)\/)*)(?<configurationid>[a-zA-Z0-9\s_@^!#$%&.\-]+)\.json$)"
+    );
 
     // /etc/dsg/configs/overrides/[$appid]/$resource/[$subpath]/$override_id.json
-    static QRegularExpression etcReg(R"(^/etc/dsg/configs/overrides/(?<appid>([a-z0-9\s\-_\@\-\^!#$%&.]+\/)?)(?<resource>[a-z0-9\s\-_\@\-\^!#$%&.]+)/(?<subpath>([a-z0-9\s\-_\@\-\^!#$%&.]+\/)*)(?<configurationid>[a-z0-9\s\-_\@\-\^!#$%&.]+).json$)");
+    static QRegularExpression etcReg(
+        R"(^/etc/dsg/configs/overrides/(?<appid>(?>[a-zA-Z0-9\s_@^!#$%&.\-]+)\/)?(?<resource>(?>[a-zA-Z0-9\s_@^!#$%&.\-]+))/(?<subpath>(?:(?>[a-zA-Z0-9\s_@^!#$%&.\-]+)\/)*)(?<configurationid>[a-zA-Z0-9\s_@^!#$%&.\-]+)\.json$)"
+    );
 
     QRegularExpressionMatch match;
     match = usrReg.match(path);

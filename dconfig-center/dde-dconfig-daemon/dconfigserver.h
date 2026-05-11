@@ -5,6 +5,7 @@
 #pragma once
 
 #include "dconfig_global.h"
+#include <optional>
 #include <QObject>
 #include <QDBusObjectPath>
 #include <QDBusContext>
@@ -83,6 +84,9 @@ private:
     ConfigureId getConfigureIdByPath(const QString &path);
 
     bool isConfigurePath(const QString &path, const QString& appId) const;
+
+    std::optional<QString> updateInternal(const QString &path);
+
     // Reload interface related structures and methods
     struct FileSignature {
         qint64 size;

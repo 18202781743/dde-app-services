@@ -435,7 +435,7 @@ bool DSGConfigServer::isConfigurePath(const QString &path, const QString &appId)
  当描述文件被修改或override目录新增、移除、修改文件时，需要重新解析对应的文件内容，
  提供刷新服务，由配置工具调用来运行时刷新提供的文件访问信息。
  */
-void DSGConfigServer::update(const QString &path)
+std::optional<QString> DSGConfigServer::updateInternal(const QString &path)
 {
     qCInfo(cfLog()) << "Update resource:" << path;
 
@@ -445,14 +445,8 @@ void DSGConfigServer::update(const QString &path)
            qPrintable(configureInfo.subpath),
            qPrintable(configureInfo.resource));
     if (configureInfo.isInValid()) {
-        QString errorMsg = QString("It's illegal resource [%1].").arg(path);
-        if (calledFromDBus()) {
-            sendErrorReply(QDBusError::Failed, errorMsg);
-        }
-        qWarning() << errorMsg;
-        return;
+        return QString("It's illegal resource [%1].").arg(path);
     }
-
 
     const GenericResourceKey resourceKey = getGenericResourceKey(configureInfo.resource, configureInfo.subpath);
     if (auto resource = resourceObject(resourceKey)) {
@@ -461,11 +455,19 @@ void DSGConfigServer::update(const QString &path)
                qPrintable(configureInfo.appid));
         const auto &innerAppid = outerAppidToInner(configureInfo.appid);
         if (!resource->reparse(innerAppid)) {
-            QString errorMsg = QString("Update the resource path[%1] error.").arg(path);
-            if (calledFromDBus()) {
-                sendErrorReply(QDBusError::Failed, errorMsg);
-            }
-            qWarning() << qPrintable(errorMsg);
+            return QString("Update the resource path[%1] error.").arg(path);
+        }
+    }
+    return std::nullopt;
+}
+
+void DSGConfigServer::update(const QString &path)
+{
+    const auto errorMsg = updateInternal(path);
+    if (errorMsg) {
+        qWarning() << *errorMsg;
+        if (calledFromDBus()) {
+            sendErrorReply(QDBusError::Failed, *errorMsg);
         }
     }
 }
@@ -557,12 +559,23 @@ void DSGConfigServer::reload()
 
     changedFiles.removeDuplicates();
 
-    // Process changed files
-    for (const auto &file : std::as_const(changedFiles)) {
-        update(file);
+    if (changedFiles.isEmpty()) {
+        qCInfo(cfLog()) << "Reload completed, no files changed";
+        return;
     }
 
-    qCInfo(cfLog()) << "Reload completed, processed" << changedFiles.size() << "files";
+    // Process changed files
+    int failedCount = 0;
+    for (const auto &file : std::as_const(changedFiles)) {
+        const auto errorMsg = updateInternal(file);
+        if (errorMsg) {
+            qCWarning(cfLog()) << "Reload failed to update file:" << file << ", reason:" << *errorMsg;
+            ++failedCount;
+        }
+    }
+
+    qCInfo(cfLog()) << "Reload completed, processed" << changedFiles.size() << "files,"
+                    << failedCount << "failed";
 }
 
 // Get all configuration file signatures
