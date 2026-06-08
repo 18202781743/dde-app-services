@@ -8,7 +8,7 @@ _dde_dconfig() {
 	local cur prev words cword
 	_init_completion || return
 
-	local opts=("-a -r -k")
+	local opts=("-a -r -s -k")
 
 	case $prev in
 	'dde-dconfig')
@@ -35,16 +35,40 @@ _dde_dconfig() {
 		return
 		;;
 	'-r')
-		local a=${COMP_WORDS[COMP_CWORD - 2]}
-		local result=($(dde-dconfig list -a $a))
-		COMPREPLY=($(compgen -W "${result[*]}" -- $cur))
+		local a=""
+		for ((i = 0; i < ${#words[@]}; i++)); do
+			if [[ ${words[i]} == "-a" && $((i+1)) -lt ${#words[@]} ]]; then
+				a=${words[i+1]}
+				break
+			fi
+		done
+		if [[ -n "$a" ]]; then
+			local result=($(dde-dconfig list -a $a 2>/dev/null))
+			COMPREPLY=($(compgen -W "${result[*]}" -- $cur))
+		else
+			local result=($(dde-dconfig list -r "" 2>/dev/null))
+			COMPREPLY=($(compgen -W "${result[*]}" -- $cur))
+		fi
+		return
+		;;
+	'-s')
 		return
 		;;
 	'-k')
-		local a=${COMP_WORDS[COMP_CWORD - 4]}
-		local r=${COMP_WORDS[COMP_CWORD - 2]}
-		local result=($(dde-dconfig --get -a $a -r $r))
-		COMPREPLY=($(compgen -W "${result[*]}" -- $cur))
+		local a=""
+		local r=""
+		for ((i = 0; i < ${#words[@]}; i++)); do
+			if [[ ${words[i]} == "-a" && $((i+1)) -lt ${#words[@]} ]]; then
+				a=${words[i+1]}
+			fi
+			if [[ ${words[i]} == "-r" && $((i+1)) -lt ${#words[@]} ]]; then
+				r=${words[i+1]}
+			fi
+		done
+		if [[ -n "$a" && -n "$r" ]]; then
+			local result=($(dde-dconfig --get -a $a -r $r 2>/dev/null))
+			COMPREPLY=($(compgen -W "${result[*]}" -- $cur))
+		fi
 		return
 		;;
 	esac
@@ -54,10 +78,7 @@ _dde_dconfig() {
 	fi
 
 	if ((${#COMPREPLY[@]} != 0)); then
-		# this removes any options from the list of completions that have
-		# already been specified somewhere on the command line, as long as
-		# these options can only be used once.
-		local -A onlyonce=([-a]=1 [-r]=1 [-k]=1)
+		local -A onlyonce=([-a]=1 [-r]=1 [-s]=1 [-k]=1)
 		local j
 		for i in "${words[@]}"; do
 			[[ $i && -v onlyonce["$i"] ]] || continue

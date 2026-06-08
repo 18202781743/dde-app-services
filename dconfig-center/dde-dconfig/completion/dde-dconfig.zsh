@@ -15,41 +15,76 @@ _dde-dconfig() {
     'gui:gui模式，用于启动GUI工具，需要安装对应的GUI工具dde-dconfig-editor'
   )
 
+  local -a options=(
+    '-a:指定应用Id(appid)'
+    '-r:指定配置Id(resource)'
+    '-s:指定子目录(subpath)'
+    '-k:指定配置项Key值'
+  )
+
   _arguments -C -s -S -n \
     '(* -)'{-v,--version}"[display version information]: :->full" \
     '(- 1 *)'{-h,--help}'[display usage information]: :->full' \
     '1:cmd:->cmds' \
     '*:: :->args' && ret=0
 
-  local last_index=$((${#words[@]}-1))
-  local prev=${words[$last_index]}
+  local prev=${words[CURRENT-1]}
   case "$state" in
   cmds)
     _describe -t commands 'commands' commands
+    _describe -t options 'options' options
     ;;
   args)
     case $prev in
-    'list' | 'set' | 'get' | 'reset' | 'watch' | '-a')
+    'list' | 'set' | 'get' | 'reset' | 'watch')
+      local result=($(dde-dconfig list))
+      compadd -a result
+      ret=0
+      ;;
+    '-a')
       local result=($(dde-dconfig list))
       compadd -a result
       ret=0
       ;;
     '-r')
-      local a=$words[$(($last_index-1))]
-		  local result=($(dde-dconfig list -a $a))
-      compadd -a result
+      local a=""
+      for ((i = 1; i < CURRENT; i++)); do
+        if [[ ${words[i]} == "-a" && $((i+1)) -lt CURRENT ]]; then
+          a=${words[i+1]}
+          break
+        fi
+      done
+      if [[ -n "$a" ]]; then
+        local result=($(dde-dconfig list -a $a 2>/dev/null))
+        compadd -a result
+      else
+        local result=($(dde-dconfig list -r "" 2>/dev/null))
+        compadd -a result
+      fi
+      ret=0
+      ;;
+    '-s')
       ret=0
       ;;
     '-k')
-      local a=$words[$(($last_index-3))]
-      local r=$words[$(($last_index-1))]
-		  local result=($(dde-dconfig --get -a $a -r $r))
-      compadd -a result
+      local a=""
+      local r=""
+      for ((i = 1; i < CURRENT; i++)); do
+        if [[ ${words[i]} == "-a" && $((i+1)) -lt CURRENT ]]; then
+          a=${words[i+1]}
+        fi
+        if [[ ${words[i]} == "-r" && $((i+1)) -lt CURRENT ]]; then
+          r=${words[i+1]}
+        fi
+      done
+      if [[ -n "$a" && -n "$r" ]]; then
+        local result=($(dde-dconfig --get -a $a -r $r 2>/dev/null))
+        compadd -a result
+      fi
       ret=0
       ;;
     *)
-      local result=('-a' '-k' '-r')
-      compadd -a result
+      _describe -t options 'options' options
       ret=0
       ;;
     esac
