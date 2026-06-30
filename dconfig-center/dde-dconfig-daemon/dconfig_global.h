@@ -243,8 +243,12 @@ inline QString configPrefixPath()
     return path;
 }
 
-inline int check_caller_sid2(pid_t caller_pid)
+inline int check_caller_sid2(uint uid, pid_t caller_pid)
 {
+    if (uid != 0) {
+        qWarning() << "[check_caller_sid2] uid != 0, uid : " << uid;
+        return -EPERM;
+    }
     char sid2_attr_path[PATH_MAX] = {0};
     snprintf(sid2_attr_path, PATH_MAX, "/proc/%d/attr/sid2", caller_pid);
     FILE* fp_sid2_attr = fopen(sid2_attr_path, "r");

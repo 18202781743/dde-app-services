@@ -284,9 +284,18 @@ bool DSGConfigConn::checkDBusSender(const QString &key)
             qWarning() << "[checkDBusSender] not called by dbus.";
             return false;
         }
-        uint pid = connection().interface()->servicePid(message().service());
+        auto service = message().service();
+        const auto uidReply = connection().interface()->serviceUid(service);
+        const auto pidReply = connection().interface()->servicePid(service);
+        if (!uidReply.isValid() || !pidReply.isValid()) {
+            qWarning() << "[checkDBusSender] failed to get dbus sender uid or pid.";
+            return false;
+        }
+
+        uint uid = uidReply.value();
+        uint pid = pidReply.value();
         qInfo() << "[checkDBusSender] dbus sender pid : " << pid;
-        return check_caller_sid2(static_cast<pid_t>(pid)) == 0;
+        return check_caller_sid2(uid, static_cast<pid_t>(pid)) == 0;
     }
     return true;
 }
