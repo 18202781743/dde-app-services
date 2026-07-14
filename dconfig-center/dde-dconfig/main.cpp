@@ -59,31 +59,45 @@ public:
         subpathid = parser.value(subpathOption);
         key = fetchKey();
     }
-    // fallback to positionalArgument as key
+    // Fall back to a positional key. When -a supplies the appid, the first
+    // argument after the command is already the key; otherwise it follows the
+    // positional appid.
     inline QString fetchKey() const
     {
         if (parser.isSet(keyOption))
             return parser.value(keyOption);
-        if (parser.positionalArguments().size() > 2) {
-            return parser.positionalArguments().at(2);
-        }
+
+        const auto positions = parser.positionalArguments();
+        const int keyIndex = parser.isSet(appidOption) ? 1 : 2;
+        if (positions.size() > keyIndex)
+            return positions.at(keyIndex);
         return QString();
     }
 
     inline bool isSetKey() const
     {
-        return parser.isSet(keyOption) || parser.positionalArguments().size() > 2;
+        if (parser.isSet(keyOption))
+            return true;
+        const int keyIndex = parser.isSet(appidOption) ? 1 : 2;
+        return parser.positionalArguments().size() > keyIndex;
     }
 
     // fallback to positionalArgument as appid
     inline QString fetchAppid() const
     {
-        if (parser.isSet(appidOption))
-            return parser.value(appidOption);
-        if (parser.positionalArguments().size() > 1) {
-            return parser.positionalArguments().at(1);
+        QString value;
+        if (parser.isSet(appidOption)) {
+            value = parser.value(appidOption);
+        } else if (parser.positionalArguments().size() > 1) {
+            value = parser.positionalArguments().at(1);
         }
-        return QString();
+
+        // Some completion engines retain the quotes of an explicitly empty
+        // argument in their words array. Accept those representations as the
+        // documented empty appid used for application-independent configs.
+        if (value == QStringLiteral("\"\"") || value == QStringLiteral("''"))
+            return QString();
+        return value;
     }
 
     inline bool isSetAppid() const
@@ -139,7 +153,7 @@ int CommandManager::listCommand()
 {
     // list命令，查看app、resource、subpath
     if (isSetAppid()) {
-        if (!existAppid(appid)) {
+        if (!appid.isEmpty() && !existAppid(appid)) {
             outpuSTDError(QString("not exist appid:%1").arg(appid));
             return 1;
         }
@@ -154,7 +168,7 @@ int CommandManager::listCommand()
                 outpuSTD(item);
             }
         } else {
-            auto resources = resourcesForApp(appid);
+            const auto resources = availableResourcesForApp(appid);
             for (auto item : resources) {
                 outpuSTD(item);
             }
@@ -188,7 +202,8 @@ int CommandManager::getCommand()
                             "description",
                             "visibility",
                             "permissions",
-                            "version"};
+                            "version",
+                            "isDefaultValue"};
         for (auto item : methods) {
             outpuSTD(item);
         }
@@ -404,7 +419,7 @@ int main(int argc, char *argv[])
     parser.addOption(subpathOption);
 
     QCommandLineOption keyOption("k", QCoreApplication::translate("main", "configure item's key.\n"
-                                                                          "three positional argument as key if not the option"), "key", QString());
+                                                                          "next positional argument after appid as key if not the option"), "key", QString());
     parser.addOption(keyOption);
 
     QCommandLineOption valueOption("v", QCoreApplication::translate("main", "new value to set configure item."), "value", QString());

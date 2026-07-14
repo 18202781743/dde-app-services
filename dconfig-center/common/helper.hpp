@@ -131,6 +131,24 @@ static ResourceList resourcesForAllApp(const QString &localPrefix = QString())
     return result.values();
 }
 
+// Return every resource that can be opened with appid. Generic resources are
+// valid for every application and are the only resources available when the
+// appid is empty.
+static ResourceList availableResourcesForApp(const QString &appid, const QString &localPrefix = QString())
+{
+    QSet<ResourceId> result;
+    if (!appid.isEmpty()) {
+        const auto resources = resourcesForApp(appid, localPrefix);
+        for (const auto &resource : resources)
+            result.insert(resource);
+    }
+
+    const auto genericResources = resourcesForAllApp(localPrefix);
+    for (const auto &resource : genericResources)
+        result.insert(resource);
+    return result.values();
+}
+
 static SubpathList subpathsForResource(const AppId &appid, const ResourceId &resourceId, const QString &localPrefix = QString())
 {
     SubpathList result;

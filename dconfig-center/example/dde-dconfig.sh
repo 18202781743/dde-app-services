@@ -14,8 +14,8 @@ dde-dconfig list
 # list all resource for the appid.
 dde-dconfig list dconfig-example
 
-# list all matched common resource.
-dde-dconfig list -r=""
+# list all application-independent resources with an explicitly empty appid.
+dde-dconfig list -a ""
 
 #list all subpath for the resource.
 dde-dconfig list dconfig-example -r=example
@@ -25,6 +25,7 @@ dde-dconfig list dconfig-example -r=example
 dde-dconfig get
 
 # query all keys for the resource, which `subpath` is '/a'.
+# Subpath is dynamic and is passed through without completion-time validation.
 dde-dconfig get dconfig-example -r=example -s=/a
 
 # query name for the key, which `language` is 'zh_CN'.

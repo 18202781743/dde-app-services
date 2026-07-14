@@ -280,7 +280,7 @@ sudo journalctl -u dde-dconfig-daemon.service -f -b
 ## 内置工具
 
 ### dde-dconfig
-dde-config 是一个命令行工具，主要用于通过命令行的方式，浏览和设置应用的配置项，可根据`dde-dconfig --help`获取帮助信息。
+dde-dconfig 是一个命令行工具，主要用于通过命令行的方式，浏览和设置应用的配置项，可根据`dde-dconfig --help`获取帮助信息。
 
 以下以应用名为`dconfig-example`，配置id为 `example`， 配置项名称为 `key1`示例：
 - 设置配置项
@@ -294,6 +294,30 @@ dde-dconfig --get -a dconfig-example -r example -k key1
 - 浏览应用所有配置:
 ``` bash
 dde-dconfig --list -a dconfig-example
+```
+- 浏览和读取应用无关配置（空 appid）:
+``` bash
+dde-dconfig --list -a ""
+dde-dconfig --get -a "" -r example -k key1
+```
+- 使用动态 subpath:
+``` bash
+dde-dconfig --get -a dconfig-example -r example -s /runtime/instance -k key1
+```
+  `subpath` 是运行时路径，并且必须以 `/` 开头。为方便输入，`-s` 的值为空时，
+  命令补全只会补上起始的 `/`；`/` 后面的动态路径不会被枚举或校验，也不要求它
+  对应已安装的固定目录。补全 Key 时只根据 appid 和 resource 查询配置结构，不会把
+  `subpath` 传给补全查询。
+
+  命令和位置参数也支持逐级补全。例如 `get` 后补全 appid，位置 appid 后补全 Key；
+  Bash 和 Zsh 使用相同的补全步骤。对于应用无关配置，输入 `dde-dconfig get ''`（或
+  `dde-dconfig get -a ''`）后会先补全 `-r`，再次按 Tab 补全 resource 的值，生成 `-r <resource>`，而不会擅自生成
+  `-r=<resource>`；只有用户已经输入 `-r=` 时才保留等号形式并补全它的值。选择资源后
+  继续补全 Key。使用 `-a` 指定 appid 时，下一个位置参数同样可以直接作为 Key，
+  补全不会额外插入 `-k=`：
+``` bash
+dde-dconfig get '' -r example key1
+dde-dconfig get -a dconfig-example -r example key1
 ```
 - 启动 dde-dconfig-editor
 ``` bash
@@ -312,6 +336,5 @@ sudo apt install dde-dconfig-editor
     - OEM： 导出override配置文件
     - config language： 切换配置项描述语言，默认为英文
 
-
-***应用列表是根据$DSG_DATA_DIRS/configs或者默认的/usr/share/dsg/configs中的子目录名来获取的，所以对于自定义的appid，应用无关配置无法通过此工具设置。***
-
+应用列表根据 `$DSG_DATA_DIRS/configs`（默认 `/usr/share/dsg/configs`）中的子目录名生成；
+应用无关配置不属于任何应用目录，使用显式空 appid（`-a ""`）访问。
