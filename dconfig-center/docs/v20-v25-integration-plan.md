@@ -143,7 +143,8 @@ Qt5 编译的问题。整合分支启用 C++17 后，容器遍历最终仍使用
 - cherry-pick 冲突解决包含在对应的 cherry-pick 提交内。
 - 缓存双加载、DTK5适配、测试和本文档属于新改动，使用
   `git-commit-helper` 分仓库提交。
-- 默认不推送远端，不创建 PR。
+- 提交后推送到个人 GitHub fork，并分别向上游仓库创建 PR，请求
+  `BLumia`、`mhduiy` review。
 
 ## 7. 测试与验收
 
