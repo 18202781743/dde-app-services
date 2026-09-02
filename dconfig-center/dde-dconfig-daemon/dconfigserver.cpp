@@ -16,6 +16,8 @@
 #include <QFile>
 #include <DConfigFile>
 
+#include <utility>
+
 #include "configmanager_adaptor.h"
 
 #define DSG_CONFIG "org.desktopspec.ConfigManager"
@@ -543,7 +545,7 @@ void DSGConfigServer::reload()
     // Find changed files
     auto diffConfigureFiles = [] (const QVector<FileSignature> &s1, const QVector<FileSignature> &s2) {
         QStringList diffs;
-        for (const auto& item : qAsConst(s1)) {
+        for (const auto& item : std::as_const(s1)) {
             auto iter = std::find_if(s2.cbegin(), s2.cend(), [&item](const FileSignature& other) {
                 return item.filePath == other.filePath;
             });
@@ -567,7 +569,7 @@ void DSGConfigServer::reload()
 
     // Process changed files
     int failedCount = 0;
-    for (const auto &file : qAsConst(changedFiles)) {
+    for (const auto &file : std::as_const(changedFiles)) {
         const auto errorMsg = updateInternal(file);
         if (errorMsg) {
             qCWarning(cfLog()) << "Reload failed to update file:" << file << ", reason:" << *errorMsg;
@@ -593,12 +595,12 @@ QVector<DSGConfigServer::FileSignature> DSGConfigServer::allConfigureFileSignatu
     QStringList overrideDirs {
         QString("%1/etc/dsg/configs/overrides").arg(localPrefix)
     };
-    for (const auto &dir : qAsConst(metaDirs)) {
+    for (const auto &dir : std::as_const(metaDirs)) {
         overrideDirs << QString("%1/overrides").arg(dir);
     }
     dirs << overrideDirs;
 
-    for (const QString &dir : qAsConst(dirs)) {
+    for (const QString &dir : std::as_const(dirs)) {
         if (!QDir(dir).exists())
             continue;
 

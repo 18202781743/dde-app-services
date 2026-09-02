@@ -1,0 +1,46 @@
+[Unit]
+Description=deepin dconfig daemon service
+
+# Ask for the dbus socket.
+Wants=dbus.socket
+After=dbus.socket
+
+[Service]
+Type=dbus
+User=root
+BusName=org.desktopspec.ConfigManager
+ExecStart=/usr/bin/dde-dconfig-daemon
+Restart=always
+StartLimitBurst=0
+RestartSec=5
+OOMScoreAdjust=-250
+Environment=DSG_DATA_DIRS=/usr/share/dsg:/persistent/linglong/entries/share/dsg
+
+ProtectSystem=strict
+# 创建/var/dsg目录
+ReadWritePaths=/var/dsg
+ReadWritePaths=/home
+
+InaccessiblePaths=/etc/shadow
+InaccessiblePaths=-/etc/NetworkManager/system-connections
+InaccessiblePaths=-/etc/pam.d
+InaccessiblePaths=-/usr/share/uadp/
+
+NoNewPrivileges=true
+# 非gloable数据存储在/home
+#ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+PrivateMounts=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+# 需要读取/proc的exe uid字段数据
+#PrivateUsers=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RemoveIPC=yes
+MemoryDenyWriteExecute=yes
+#MemoryLimit=100M
