@@ -258,7 +258,7 @@ inline int check_caller_sid2(uint uid, pid_t caller_pid)
     }
 
     char sid2[256] = {0};
-    size_t nread = fread( sid2, 1, 256, fp_sid2_attr);
+    size_t nread = fread(sid2, 1, sizeof(sid2) - 1, fp_sid2_attr);
     fclose(fp_sid2_attr);
     if(nread < 1){
         qWarning() << QString("process %1  %2 has no sid2\n").arg(caller_pid).arg(sid2_attr_path);

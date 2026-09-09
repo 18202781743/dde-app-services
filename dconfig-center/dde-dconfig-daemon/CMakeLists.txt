@@ -33,35 +33,12 @@ set(DCONFIG_XMLS_FILES
 )
 install (FILES ${DCONFIG_XMLS_FILES} DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/interfaces)
 
-if (QT_VERSION_MAJOR EQUAL 5)
-    set(DBUS_CONFIG_FILE services/qt5/org.desktopspec.ConfigManager.conf)
-    set(DBUS_SERVICE_FILE services/qt5/org.desktopspec.ConfigManager.service)
-    set(SYSTEMD_SERVICE_FILE services/qt5/dde-dconfig-daemon.service)
-    set(POLKIT_POLICY_FILE services/qt5/org.desktopspec.ConfigManager.policy)
-else()
-    set(DBUS_CONFIG_FILE services/org.desktopspec.ConfigManager.conf)
-    set(DBUS_SERVICE_FILE services/org.desktopspec.ConfigManager.service)
-    set(SYSTEMD_SERVICE_FILE services/dde-dconfig-daemon.service)
-endif()
-
 ## dbus config file
-install(FILES ${DBUS_CONFIG_FILE}
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/system.d
-    RENAME org.desktopspec.ConfigManager.conf)
+install (FILES services/org.desktopspec.ConfigManager.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/system.d)
 
 ## services files
-install(FILES ${DBUS_SERVICE_FILE}
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/system-services
-    RENAME org.desktopspec.ConfigManager.service)
-install(FILES ${SYSTEMD_SERVICE_FILE}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system
-    RENAME dde-dconfig-daemon.service)
-
-if (POLKIT_POLICY_FILE)
-    install(FILES ${POLKIT_POLICY_FILE}
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/polkit-1/actions
-        RENAME org.desktopspec.ConfigManager.policy)
-endif()
+install(FILES services/org.desktopspec.ConfigManager.service DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/system-services)
+install(FILES services/dde-dconfig-daemon.service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system)
 
 ## bin
 install(TARGETS dde-dconfig-daemon DESTINATION ${CMAKE_INSTALL_BINDIR})

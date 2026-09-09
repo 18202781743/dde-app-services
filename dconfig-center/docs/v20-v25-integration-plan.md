@@ -6,9 +6,9 @@
 `origin/master`，使同一套 dde-app-services 源码能够使用 DTK5/Qt5
 或 DTK6/Qt6 编译。
 
-Qt6 的 systemd service、D-Bus activation 和 D-Bus policy 沿用 v25
-版本；Qt5 构建安装 eagle 对应的运行环境文件。本次不验证 v20 系统运行及
-Debian 打包，只验证 DTK5、DTK6 编译、安装清单和现有单元测试。
+systemd service、D-Bus activation/config 和 policy 不随 Qt 主版本切换，
+全部沿用 v25 文件及安装规则。本次不验证 v20 系统运行及 Debian 打包，只
+验证 DTK5、DTK6 编译、安装清单和现有单元测试。
 
 缓存兼容逻辑在 dtkcore 中实现。DConfig 设置新缓存路径后，每次加载均以
 旧缓存为基础，再使用新缓存覆盖同名键；缓存保存继续使用 dtkcore 已有的
@@ -83,8 +83,8 @@ Qt5 编译的问题。整合分支启用 C++17 后，容器遍历最终仍使用
 - 编辑器空索引崩溃修复。
 - 全局缓存同步资源键转换修复。
 - 配置 reload 和 Debian trigger 系列提交。
-- systemd 加固和服务身份相关提交不直接覆盖 v25 文件；eagle 最终资源作为
-  Qt5 专用变体保留。
+- systemd 加固、D-Bus policy 和服务身份相关提交；运行环境统一保留 v25
+  实现，不摘取 eagle 资源文件。
 
 ## 4. dtkcore 缓存兼容设计
 
@@ -129,12 +129,9 @@ Qt5 编译的问题。整合分支启用 C++17 后，容器遍历最终仍使用
 - C++ 标准调整为 C++17，解决 `std::optional` 在 C++14 下编译失败。
 - 使用无时区参数的 `QFileInfo::metadataChangeTime()`，兼容 Qt5/Qt6。
 - Authorized 权限继续使用 eagle 的 SID2、D-Bus UID/PID 和 root 校验逻辑。
-- CMake 根据 `QT_VERSION_MAJOR` 选择运行环境文件：Qt5 安装 eagle 的 root
-  服务、D-Bus activation/config 和 PolicyKit policy；Qt6 安装
-  origin/master 的 deepin-daemon 服务及 D-Bus 文件，且不额外安装 v20
-  PolicyKit policy。
-- 两个版本安装时均重命名为相同 canonical 文件名，因此 Debian 安装清单
-  无需区分源文件名。
+- SID2 最多读取缓冲区容量减一，确保安全标签始终有 NUL 终止符。
+- Qt5、Qt6 构建均使用 origin/master 的 v25 systemd、D-Bus 和 policy
+  文件及原有 CMake 安装规则，不增加运行环境分支。
 - 新增 include 只使用 Qt、DTK或系统公共头文件。
 
 ## 6. 提交规则
@@ -187,15 +184,11 @@ dde-app-services：
 上述提交均保留原作者、提交说明、Change-Id，并带
 `(cherry picked from commit ...)` 来源记录。
 
-Qt5 运行环境资源取自 eagle 最终树；其关键来源提交包括 policy
-`17f8464`、systemd 最终调整 `bea808b`、activation 最终调整 `727b25a`
-以及 D-Bus config 最终调整 `383ebe5`。这些资源以 Qt5 专用路径加入，不覆盖
-v25 canonical 源文件。
-
 ### 8.2 新增提交
 
 - dtkcore `b1800e7`：旧/新缓存双加载、新缓存覆盖、保存到新路径及测试。
-- dde-app-services 的 CMake、Qt5 资源和本文档在同一整合提交中提交。
+- dde-app-services：C++17/Qt5 兼容、SID2 边界修复和本文档；运行环境文件
+  保持 v25 基线。
 
 ### 8.3 验证结果
 
@@ -207,5 +200,5 @@ v25 canonical 源文件。
 - 完整 dde-app-services 测试共 34 个；当前容器不存在 UID 1001～1004，导致
   5 个 `removeUserData*` 用例无法建立测试资源而失败，属于测试环境前置条件，
   与本次改动无关。
-- 安装清单已核对：DTK5 安装 Qt5 systemd/D-Bus/policy 文件；DTK6 安装
-  v25 systemd/D-Bus 文件且不安装 v20 policy。安装结果与各自源文件内容一致。
+- 安装清单已核对：DTK5、DTK6 均安装相同的 v25 systemd 和 D-Bus 文件，
+  不安装 eagle 的 PolicyKit policy。
